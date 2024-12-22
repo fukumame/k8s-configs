@@ -7,6 +7,7 @@ dependencies = [
     "openshift==0.11.2",
     "jinja2==3.0.3",
     "jinja2-base64-filters==0.1.1",
+    "ansible>=11.1.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
