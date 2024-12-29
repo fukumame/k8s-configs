@@ -27,7 +27,7 @@
 
 - name: Building GDRCopy
   shell:
-    cmd: CUDA=/usr/local/cuda-{{cuda_version}} ./build-deb-packages.sh
+    cmd: CUDA=/usr/local/cuda-{{cuda_version_for_gdr}} ./build-deb-packages.sh
     chdir: /tmp/gdrcopy-{{ gdr_version }}/packages
 
 - name: Install GDRCopy
@@ -36,7 +36,7 @@
     chdir: /tmp/gdrcopy-{{ gdr_version }}/packages
   become: yes
   loop:
-    - gdrdrv-dkms_{{ gdr_version_minor }}_amd64.{{ os_distribution }}.deb
-    - libgdrapi_{{ gdr_version_minor}}_amd64.{{ os_distribution }}.deb
-    - gdrcopy-tests_{{ gdr_version_minor }}_amd64.{{ os_distribution }}+cuda{{cuda_version}}.deb
-    - gdrcopy_{{ gdr_version_minor }}_amd64.{{ os_distribution }}.deb
+    - gdrdrv-dkms_{{ gdr_version_minor }}_amd64.{{ os_distribution_for_gdr }}.deb
+    - libgdrapi_{{ gdr_version_minor}}_amd64.{{ os_distribution_for_gdr }}.deb
+    - gdrcopy-tests_{{ gdr_version_minor }}_amd64.{{ os_distribution_for_gdr }}+cuda{{cuda_version_for_gdr}}.deb
+    - gdrcopy_{{ gdr_version_minor }}_amd64.{{ os_distribution_for_gdr }}.deb
