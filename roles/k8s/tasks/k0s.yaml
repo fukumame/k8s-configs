@@ -22,10 +22,10 @@
     src: templates/k0sctl.yaml.j2
     dest: k0sctl.yaml
 
-- name: Reset kubernetes cluster
-  shell:
-     cmd: k0sctl reset --config k0sctl.yaml --force
-     chdir: '{{ mdxuser_home }}'
+#- name: Reset kubernetes cluster
+#  shell:
+#     cmd: k0sctl reset --config k0sctl.yaml --force
+#     chdir: '{{ mdxuser_home }}'
 
 - name: Create kubernetes cluster
   shell:
