@@ -46,12 +46,13 @@ For example, use the ``-A`` (ForwardAgent) option to allow recursive SSH access 
 Install the ansible package on the bastion host.
 ```sh
 $ sudo apt update
-$ sudo apt install ansible
+$ sudo apt install ansible # TODO check
 ```
 
-Install python3-pip to OS
+Install aqua and rye.
 ```sh
-$ sudo apt install python3-pip
+$ curl -sSfL https://raw.githubusercontent.com/aquaproj/aqua-installer/v3.0.1/aqua-installer | bash
+$ aqua i
 ```
 
 Upgrade base library to run pip installation command correctly
