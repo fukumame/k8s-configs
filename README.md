@@ -56,8 +56,7 @@ $ sudo apt install python3-pip
 
 Upgrade base library to run pip installation command correctly
 ```shell
-$ pip3 install --upgrade setuptools pip wheel
-$ pip3 install --upgrade packaging
+$ rye sync
 ```
 
 Install required libraries
