@@ -1,2 +1,2 @@
 #!/bin/bash
-ansible-playbook -i inventory.ini site.yaml --tags all --ask-vault-pass
+rye run ansible-playbook -i inventory.ini site.yaml --tags all --ask-vault-pass

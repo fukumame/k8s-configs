@@ -1,2 +1,2 @@
 #!/bin/bash
-ansible-vault encrypt vault.yaml
+rye run ansible-vault encrypt vault.yaml
