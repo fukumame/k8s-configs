@@ -49,18 +49,17 @@ $ sudo apt update
 $ sudo apt install ansible
 ```
 
-Install python3-pip to OS
+Install [uv](https://docs.astral.sh/uv/)
 ```sh
-$ sudo apt install python3-pip
+$ curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Upgrade base library to run pip installation command correctly
+Install python packages with uv
 ```shell
-$ pip3 install --upgrade setuptools pip wheel
-$ pip3 install --upgrade packaging
+$ uv sync
 ```
 
-Install required libraries
+Install other required libraries
 ```shell
 sh install_dep_packages.sh
 ```
