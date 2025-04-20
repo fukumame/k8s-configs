@@ -43,10 +43,15 @@ For example, use the ``-A`` (ForwardAgent) option to allow recursive SSH access 
 
 ## Getting Started
 
-Install the ansible package on the bastion host.
+Clone k8s-config repository
+```sh
+cd ~
+git clone https://github.com/fukumame/k8s-configs.git
+```
+
+Update the list of packages
 ```sh
 $ sudo apt update
-$ sudo apt install ansible
 ```
 
 Install [uv](https://docs.astral.sh/uv/)
@@ -56,6 +61,7 @@ $ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 Install python packages with uv
 ```shell
+$ cd ~/k8s-configs 
 $ uv sync
 ```
 

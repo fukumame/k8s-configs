@@ -1,3 +1,6 @@
+[bastion_host:vars]
+ansible_python_interpreter=/home/mdxuser/k8s-configs/.venv/bin/python
+
 [bastion_host]
 bastion ansible_host=
 
