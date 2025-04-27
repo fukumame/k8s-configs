@@ -72,5 +72,4 @@
 - name: Remount /fast and /large file systems
   command:
     cmd: mount --all
-    warn: false
   become: yes

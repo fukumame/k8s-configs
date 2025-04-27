@@ -2,7 +2,7 @@
 - name: Download kubectl
   shell:
     cmd: curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-    warn: false
+#    warn: false
 
 - name: Install kubectl
   copy:
