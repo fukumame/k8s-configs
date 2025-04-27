@@ -73,3 +73,17 @@
   command:
     cmd: mount --all
   become: yes
+
+- name: chmod 777 /large
+  become: yes
+  ansible.builtin.file:
+    path: /large
+    mode: '0777'
+    state: directory
+
+- name: chmod 777 /fast
+  become: yes
+  ansible.builtin.file:
+    path: /fast
+    mode: '0777'
+    state: directory

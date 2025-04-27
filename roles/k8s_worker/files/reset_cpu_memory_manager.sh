@@ -1,0 +1,1 @@
+sudo rm /var/lib/k0s/kubelet/cpu_manager_state && sudo rm /var/lib/k0s/kubelet/memory_manager_state && sudo systemctl restart k0sworker

@@ -1,0 +1,10 @@
+- name: Copy shell script to remote host home directory
+  ansible.builtin.copy:
+    src: ./files/reset_cpu_memory_manager.sh
+    dest: "{{ ansible_env.HOME }}/reset_cpu_memory_manager.sh"
+    mode: '0755'
+- name: Setup @reboot job
+  ansible.builtin.cron:
+    name: "reset memory and cpu manager on reboot"
+    special_time: reboot
+    job: "{{ ansible_env.HOME }}/reset_cpu_memory_manager.sh"
