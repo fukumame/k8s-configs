@@ -48,6 +48,15 @@
   - all
   - never
 
+- name: LLM Settings
+  hosts: kube_worker
+  roles:
+    - llm_settings
+  tags:
+  - llm_settings
+  - all
+  - never
+
 - name: Setup kubernetes gpu workers
   hosts: kube_gpu
   roles:

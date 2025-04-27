@@ -1,0 +1,5 @@
+- name: Download LLM weight file
+  ansible.builtin.get_url:
+    url: "https://huggingface.co/bluepen5805/DeepSeek-R1-Distill-Qwen-14B-Japanese-gguf/resolve/main/DeepSeek-R1-Distill-Qwen-14B-Japanese-Q3_K_L.gguf"
+    dest: "/large/DeepSeek-R1-Distill-Qwen-14B-Japanese-Q3_K_L.gguf"
+    mode: '0664'
