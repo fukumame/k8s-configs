@@ -1,0 +1,6 @@
+- name: Shutdown all worker nodes
+  hosts: kube_worker
+  become: yes
+  tasks:
+    - name: Shutdown the machine
+      ansible.builtin.shell: shutdown -h now

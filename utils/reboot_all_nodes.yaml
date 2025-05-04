@@ -1,0 +1,7 @@
+- name: Reboot all worker nodes
+  hosts: kube_worker
+  become: yes
+  tasks:
+    - name: Reboot the machine
+      ansible.builtin.reboot:
+        reboot_timeout: 1800
