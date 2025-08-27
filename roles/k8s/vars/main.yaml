@@ -1,4 +1,4 @@
 ---
-k0sctl_version: 0.20.0
-k0sctl_checksum: 04896ea2ef3edb82b35d10f4130ef392fb14e0ba35656b478c7138815b6f6664
-k0s_version: 1.31.3+k0s.0
+k0sctl_version: 0.25.1
+k0sctl_checksum: 3ebe6833e600afa79a1a51d2537364db88ac2fab85827cb1c75909331190ff09
+k0s_version: v1.33.4+k0s.0

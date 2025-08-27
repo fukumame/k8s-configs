@@ -1,0 +1,7 @@
+- name: Show playbook_dir demo
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Show playbook_dir
+      debug:
+        var: playbook_dir

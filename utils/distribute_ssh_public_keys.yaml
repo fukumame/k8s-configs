@@ -1,0 +1,21 @@
+- name: Distribute SSH public keys
+  hosts: kube_cluster
+  become: true
+  vars:
+    target_user: mdxuser
+    key_file: "{{ playbook_dir }}/files/ssh_keys.txt"
+  tasks:
+    - name: Load keys (one line per key)
+      set_fact:
+        pubkeys: >-
+          {{ lookup('file', key_file).splitlines()
+             | select('match', '^ssh-(rsa|ed25519)\\s+')
+             | list }}
+
+    - name: Install keys to authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ target_user }}"
+        key: "{{ item }}"
+        state: present
+        manage_dir: true     # ~/.ssh が無ければ作成
+      loop: "{{ pubkeys }}"
