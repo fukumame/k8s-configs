@@ -1,0 +1,14 @@
+[Unit]
+Description=Timer for k0sworker node-ip update
+After=network-online.target
+Wants=network-online.target
+
+[Timer]
+Unit=k0sworker-nodeip-update.service
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
+
