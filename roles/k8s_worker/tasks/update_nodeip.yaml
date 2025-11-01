@@ -1,0 +1,37 @@
+---
+#
+# Install k0sworker node-ip auto update service and timer
+#
+- name: Copy update node-ip script
+  ansible.builtin.copy:
+    src: files/update_k0sworker_nodeip.sh
+    dest: /usr/local/bin/update_k0sworker_nodeip.sh
+    mode: '0755'
+  become: yes
+
+- name: Install systemd service for node-ip update
+  ansible.builtin.copy:
+    src: files/k0sworker-nodeip-update.service
+    dest: /etc/systemd/system/k0sworker-nodeip-update.service
+    mode: '0644'
+  become: yes
+
+- name: Install systemd timer for node-ip update
+  ansible.builtin.copy:
+    src: files/k0sworker-nodeip-update.timer
+    dest: /etc/systemd/system/k0sworker-nodeip-update.timer
+    mode: '0644'
+  become: yes
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  become: yes
+
+- name: Enable and start node-ip update timer
+  ansible.builtin.systemd:
+    name: k0sworker-nodeip-update.timer
+    enabled: yes
+    state: started
+  become: yes
+

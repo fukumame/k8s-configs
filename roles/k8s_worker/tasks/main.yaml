@@ -2,4 +2,5 @@
 - import_tasks: topology.yaml
 - import_tasks: lustre.yaml
 - import_tasks: reset_cpu_memory_manager.yaml
+- import_tasks: update_nodeip.yaml
 #- import_tasks: cert.yaml
