@@ -20,3 +20,10 @@ spec:
 {% endfor %}
   k0s:
     version: {{ k0s_version }}
+  options:
+    drain:
+      ignoreDaemonSets: true
+      deleteEmptyDirData: true
+      force: true
+      gracePeriod: 300
+      timeout: 600

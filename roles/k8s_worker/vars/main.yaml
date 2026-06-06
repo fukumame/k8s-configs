@@ -6,3 +6,6 @@ kubelet_extra_args: >-
   --kube-reserved=cpu=500m,memory=500Mi,ephemeral-storage=1Gi 
   --system-reserved=cpu=500m,memory=500Mi,ephemeral-storage=1Gi 
   --reserved-memory=0:memory=1100Mi
+
+# DDN Exascaler CSI file driver image (each worker pre-pulls this into containerd)
+exascaler_csi_image: quay.io/ddn/exascaler-csi-file-driver:v2.8.1

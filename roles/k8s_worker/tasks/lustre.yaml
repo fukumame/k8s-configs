@@ -12,12 +12,12 @@
     name: containerd
   become: yes
 
-- name: Install exascaler CSI driver
-  command: 
+- name: Pull exascaler CSI driver image
+  command:
     cmd: >-
       ctr -n=k8s.io
         --address=/var/run/k0s/containerd.sock 
-        image import {{ mdxuser_home }}/exa-csi-driver/bin/exascaler-csi-file-driver.tar 
+        image pull {{ exascaler_csi_image }} 
   become: yes
 
 #
