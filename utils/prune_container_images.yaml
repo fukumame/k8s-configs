@@ -1,0 +1,66 @@
+# Prune unused container images from each k0s worker's containerd store.
+# crictl removes only images not referenced by any container (safe; re-pulled on demand).
+#
+# Usage:
+#   uv run ansible-playbook -i inventory.ini utils/prune_container_images.yaml
+#   uv run ansible-playbook -i inventory.ini utils/prune_container_images.yaml --limit kube-gpu5
+- name: Prune unused container images on k0s workers
+  hosts: kube_worker
+  become: yes
+  vars:
+    # Keep crictl aligned with the cluster's Kubernetes minor version.
+    crictl_version: v1.34.0
+    crictl_checksum: a8ff2a3edb37a98daf3aba7c3b284fe0aa5bff24166d896ab9ef64c8913c9f51
+    containerd_sock: unix:///run/k0s/containerd.sock
+  tasks:
+    - name: Check whether crictl is installed
+      ansible.builtin.command: crictl --version
+      register: crictl_check
+      failed_when: false
+      changed_when: false
+
+    - name: Install crictl when missing
+      when: crictl_check.rc != 0
+      block:
+        - name: Download crictl archive
+          ansible.builtin.get_url:
+            url: "https://github.com/kubernetes-sigs/cri-tools/releases/download/{{ crictl_version }}/crictl-{{ crictl_version }}-linux-amd64.tar.gz"
+            dest: "/tmp/crictl-{{ crictl_version }}.tar.gz"
+            checksum: "sha256:{{ crictl_checksum }}"
+        - name: Extract crictl into /usr/local/bin
+          ansible.builtin.unarchive:
+            src: "/tmp/crictl-{{ crictl_version }}.tar.gz"
+            dest: /usr/local/bin
+            remote_src: yes
+        - name: Remove crictl archive
+          ansible.builtin.file:
+            path: "/tmp/crictl-{{ crictl_version }}.tar.gz"
+            state: absent
+
+    - name: Configure crictl endpoint
+      ansible.builtin.copy:
+        dest: /etc/crictl.yaml
+        mode: '0644'
+        content: |
+          runtime-endpoint: {{ containerd_sock }}
+          image-endpoint: {{ containerd_sock }}
+          timeout: 10
+
+    - name: Measure containerd disk usage (before)
+      ansible.builtin.command: du -sh /var/lib/k0s/containerd
+      register: du_before
+      changed_when: false
+
+    - name: Prune unused container images
+      ansible.builtin.command: crictl rmi --prune
+      register: prune_result
+      changed_when: prune_result.stdout != ""
+
+    - name: Measure containerd disk usage (after)
+      ansible.builtin.command: du -sh /var/lib/k0s/containerd
+      register: du_after
+      changed_when: false
+
+    - name: Report reclaimed space
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }}: containerd {{ du_before.stdout.split()[0] }} -> {{ du_after.stdout.split()[0] }}"
