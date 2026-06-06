@@ -15,8 +15,12 @@
   become: yes
 
 - name: Generate default config file
+  # Use k0s's bundled containerd to generate the config. The system containerd
+  # (installed from the nvidia repo) emits config `version = 3` on newer
+  # releases, which k0s's bundled containerd (1.7.x, max version 2) cannot load
+  # -> containerd crash-loops and the node never becomes Ready.
   shell:
-    cmd: containerd config default > /etc/k0s/containerd.toml
+    cmd: /var/lib/k0s/bin/containerd config default > /etc/k0s/containerd.toml
   become: yes
 
 - name: Rewrite containerd.toml (1)
