@@ -1,0 +1,29 @@
+---
+# Runs first in site.yaml and in the utils that change many nodes at once.
+# It stops the run when the inventory is not one of inventories/<env>/,
+# or when the target is a protected environment that was not confirmed.
+- name: Check the target environment
+  hosts: all
+  gather_facts: false
+  tags:
+    - always
+  tasks:
+    - name: Check the environment settings
+      assert:
+        that:
+          - env_name is defined
+          - env_protected is defined
+        fail_msg: >-
+          Use an inventory under inventories/<env>/ and set its variables in
+          inventories/<env>/group_vars/all.yaml (see inventories/example/).
+      run_once: true
+
+    - name: Stop unless the protected environment is confirmed
+      assert:
+        that:
+          - not (env_protected | bool) or (confirm_env | default('')) == env_name
+        fail_msg: >-
+          "{{ env_name }}" is a protected environment. Add "-e confirm_env={{ env_name }}"
+          only when you really mean to change it, and narrow the run with --tags and --limit.
+        success_msg: "Target environment: {{ env_name }}"
+      run_once: true

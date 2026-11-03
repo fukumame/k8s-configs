@@ -1,0 +1,17 @@
+---
+# Settings of one environment (inventories/<env>/).
+# check_env.yaml checks them before every run.
+
+# Same as the directory name under inventories/.
+env_name: example
+# true for production. Then every run needs "-e confirm_env=<env_name>".
+env_protected: false
+
+ansible_user: mdxuser
+mdxuser_home: /home/mdxuser
+mdxuser_uid: 1000 #TODO: id -u
+
+internal_domain: internal
+roce_suffix: roce
+
+registry_server: 'harbor.{{ internal_domain}}'
