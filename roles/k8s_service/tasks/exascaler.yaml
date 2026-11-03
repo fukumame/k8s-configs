@@ -19,7 +19,7 @@
         namespace: '{{ exascaler_namespace }}'
       type: Opaque
       data:
-        exascaler-csi-file-driver-config.yaml: '{{ lookup("file", "files/exascaler-csi-file-driver-config.yaml") | b64encode }}'
+        exascaler-csi-file-driver-config.yaml: '{{ lookup("template", "exascaler-csi-file-driver-config.yaml.j2") | b64encode }}'
 
 - name: Download exascaler CSI driver
   git:

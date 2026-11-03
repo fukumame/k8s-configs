@@ -1,3 +1,5 @@
 .idea
 inventory.ini
 vault.yaml
+inventories/*/hosts.ini
+!inventories/example/hosts.ini

@@ -1,4 +1,6 @@
 ---
+- import_playbook: check_env.yaml
+
 - name: Common configuration
   hosts: all
   roles: 

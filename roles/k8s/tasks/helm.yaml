@@ -1,10 +1,28 @@
 ---
+- name: Download helm
+  get_url:
+    url: https://get.helm.sh/helm-v{{ helm_version }}-linux-amd64.tar.gz
+    checksum: 'sha256:{{ helm_checksum }}'
+    dest: '{{ mdxuser_home }}/helm.tar.gz'
+
+- name: Unarchive helm
+  unarchive:
+    src: '{{ mdxuser_home }}/helm.tar.gz'
+    dest: '{{ mdxuser_home }}'
+    remote_src: yes
+
 - name: Install helm
-  shell: 
-    cmd: |
-      curl https://helm.baltorepo.com/organization/signing.asc | sudo apt-key add -
-      sudo apt-get install apt-transport-https --yes
-      echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-      sudo apt-get update
-      sudo apt-get install helm
-#    warn: false
+  copy:
+    src: '{{ mdxuser_home }}/linux-amd64/helm'
+    dest: /usr/local/bin/helm
+    mode: '0755'
+    remote_src: yes
+  become: yes
+
+- name: Delete helm files
+  file:
+    path: '{{ item }}'
+    state: absent
+  loop:
+    - '{{ mdxuser_home }}/helm.tar.gz'
+    - '{{ mdxuser_home }}/linux-amd64'

@@ -70,30 +70,22 @@ Install other required libraries
 sh install_dep_packages.sh
 ```
 
-Copy the inventory file from the template and rewrite the file accordingly. 
+Create the inventory of your environment. Each environment has its own directory under ``inventories/``. The ``hosts.ini`` of each environment is not stored in git.
 ```sh
-$ cp inventory.ini.template inventory.ini
-$ mg inventory.ini
+$ cp -r inventories/example inventories/<env>
+$ mg inventories/<env>/hosts.ini
+$ mg inventories/<env>/group_vars/all.yaml
 ```
-At least, fill in the IP addresses of each node (by ansible_host and roce_host). Copy the kube-node and kube-gpu entries as needed.
-```ansible
-[bastion_host]
-bastion ansible_host=
+In ``hosts.ini``, fill in the IP addresses of each node (by ansible_host and roce_host). Copy the kube-node and kube-gpu entries as needed.
 
-[registry]
-harbor ansible_host=
+In ``group_vars/all.yaml``, set the environment:
+- ``env_name``: the directory name (``<env>``)
+- ``env_protected``: ``true`` for production
+- ``lustre_net``: ``tcp10`` when the storage network is "仮想NIC（自動）", ``o2ib10`` when it is "SR-IOV"
+- ``node_ip_mode``: ``static`` (node IPs set by hand, in the host range 1-100) or ``dhcp``
+- ``k8s_pod_cidr``, ``k8s_service_cidr``: must not overlap with the networks of the mdx project
 
-[kube_master]
-kube-master ansible_host=
-
-[kube_node]
-kube-node1 ansible_host= roce_host=
-kube-node2 ansible_host= roce_host=
-
-[kube_gpu]
-kube-gpu1 ansible_host= roce_host=
-kube-gpu2 ansible_host= roce_host=
-```
+If you used ``inventory.ini`` before, move it to ``inventories/prod/hosts.ini``.
 
 Copy the password file from the template and rewrite it. 
 ```sh
@@ -118,7 +110,12 @@ $ encrypt_vault.sh
 
 Run the playbook and wait until the Kubernetes platform is constructed.
 ```sh
-$ play.sh
+$ ./play.sh <env> --tags all
+```
+
+A protected environment (``env_protected: true``, such as ``prod``) stops unless you confirm it. Also narrow the run with ``--tags`` and ``--limit``:
+```sh
+$ ./play.sh prod --tags <tags> --limit <hosts> -e confirm_env=prod
 ```
 
 ## How to use the cluster

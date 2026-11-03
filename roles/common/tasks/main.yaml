@@ -1,4 +1,31 @@
 ---
+# node_ip_mode static: the address in the inventory must be set by hand, in the
+# host range 1-100 of the segment (mdx docs 12.3.1). DHCP addresses can change.
+- name: Read the address of the node
+  command: ip -4 -o addr show to {{ ansible_host }}
+  register: node_ip_addr
+  changed_when: false
+  when: node_ip_mode == 'static' and inventory_hostname in groups['kube_cluster'] | default([])
+
+- name: Check that the address is static and in the host range 1-100
+  assert:
+    that:
+      - node_ip_addr.stdout | length > 0
+      - "'dynamic' not in node_ip_addr.stdout"
+      - node_ip_host_part | int >= 1
+      - node_ip_host_part | int <= 100
+    fail_msg: >-
+      {{ inventory_hostname }} ({{ ansible_host }}) is not a static address in the host
+      range 1-100. Set a static IP first (mdx docs 12.3.1), or use node_ip_mode: dhcp.
+  vars:
+    node_ip_cidr: "{{ node_ip_addr.stdout.split()[3] }}"
+    node_ip_octets: "{{ node_ip_cidr.split('/')[0].split('.') | map('int') | list }}"
+    node_ip_host_part: >-
+      {{ (node_ip_octets[0] * 16777216 + node_ip_octets[1] * 65536
+          + node_ip_octets[2] * 256 + node_ip_octets[3])
+         % (2 ** (32 - node_ip_cidr.split('/')[1] | int)) }}
+  when: node_ip_mode == 'static' and inventory_hostname in groups['kube_cluster'] | default([])
+
 - name: Set hostname
   hostname:
     name: "{{ inventory_hostname_short }}"
