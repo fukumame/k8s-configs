@@ -50,6 +50,21 @@
     - { pattern: '\{\{ tcp_netif \}\}', replace: '{{ roce_netif }}' }
   become: yes
 
+# Needed only for the TCP path (mdx docs 7.5.1). The options take effect when
+# the Lustre modules are loaded again, for example after a reboot.
+- name: Enable ksocklnd buffer options
+  lineinfile:
+    path: /etc/modprobe.d/lustre.conf
+    backrefs: yes
+    regexp: '^#(options ksocklnd {{ item }}=.*)$'
+    line: '\1'
+    backup: yes
+  loop:
+    - rx_buffer_size
+    - tx_buffer_size
+  when: lustre_net == 'tcp10'
+  become: yes
+
 - name: Restart lustre client
   systemd:
     name: lustre_client
@@ -65,8 +80,8 @@
     line: '\1'
     backup: yes
   loop:
-    - '^#(172.17.8.40@o2ib10.*)$'
-    - '^#(172.17.8.56@o2ib10.*)$'
+    - '^#(172.17.8.40@{{ lustre_net }}.*)$'
+    - '^#(172.17.8.56@{{ lustre_net }}.*)$'
   become: yes
 
 - name: Remount /fast and /large file systems

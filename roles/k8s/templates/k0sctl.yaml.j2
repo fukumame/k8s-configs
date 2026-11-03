@@ -20,6 +20,17 @@ spec:
 {% endfor %}
   k0s:
     version: {{ k0s_version }}
+{% if k8s_pod_cidr is defined %}
+    config:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: k0s
+      spec:
+        network:
+          podCIDR: {{ k8s_pod_cidr }}
+          serviceCIDR: {{ k8s_service_cidr }}
+{% endif %}
   options:
     drain:
       ignoreDaemonSets: true

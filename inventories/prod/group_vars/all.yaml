@@ -11,3 +11,11 @@ internal_domain: internal
 roce_suffix: roce
 
 registry_server: 'harbor.{{ internal_domain}}'
+
+# The storage network is a virtual NIC, and /large is mounted over tcp10.
+lustre_net: tcp10
+# Node IPs come from DHCP.
+node_ip_mode: dhcp
+# k8s_pod_cidr / k8s_service_cidr are not set on purpose. Setting them makes k0sctl
+# rewrite k0s.yaml on the controller. The cluster uses the k0s defaults
+# (10.244.0.0/16 and 10.96.0.0/12).

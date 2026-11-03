@@ -13,6 +13,9 @@
         that:
           - env_name is defined
           - env_protected is defined
+          - lustre_net | default('') in ['tcp10', 'o2ib10']
+          - node_ip_mode | default('') in ['dhcp', 'static']
+          - (k8s_pod_cidr is defined) == (k8s_service_cidr is defined)
         fail_msg: >-
           Use an inventory under inventories/<env>/ and set its variables in
           inventories/<env>/group_vars/all.yaml (see inventories/example/).

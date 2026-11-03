@@ -16,9 +16,9 @@
         projectId: "{{ hostvars[groups['kube_worker'][0]].project_id.stdout_lines[0].split(' ')[0] }}"
         exaMountUid: "{{ mdxuser_uid | int }}"
         bindMount: "false"
-        exaFS: "172.17.8.40@o2ib10:172.17.8.41@o2ib10:/fast"
+        exaFS: "172.17.8.40@{{ lustre_net }}:172.17.8.41@{{ lustre_net }}:/fast"
         mountPoint: "/fast"
-        mountOptions: "network=o2ib10,flock,noauto,defaults"
+        mountOptions: "network={{ lustre_net }},flock,noauto,defaults"
 
 - name: Create storage class for /large
   k8s:
@@ -35,6 +35,6 @@
         projectId: "{{ hostvars[groups['kube_worker'][0]].project_id.stdout_lines[0].split(' ')[0] }}"
         exaMountUid: "{{ mdxuser_uid | int }}"
         bindMount: "false"
-        exaFS: "172.17.8.56@o2ib10:172.17.8.57@o2ib10:/large"
+        exaFS: "172.17.8.56@{{ lustre_net }}:172.17.8.57@{{ lustre_net }}:/large"
         mountPoint: /large
-        mountOptions: network=o2ib10,flock,noauto,defaults
+        mountOptions: "network={{ lustre_net }},flock,noauto,defaults"
