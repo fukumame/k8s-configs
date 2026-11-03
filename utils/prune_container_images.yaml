@@ -2,8 +2,8 @@
 # crictl removes only images not referenced by any container (safe; re-pulled on demand).
 #
 # Usage:
-#   uv run ansible-playbook -i inventory.ini utils/prune_container_images.yaml
-#   uv run ansible-playbook -i inventory.ini utils/prune_container_images.yaml --limit kube-gpu5
+#   uv run ansible-playbook -i inventories/prod/hosts.ini utils/prune_container_images.yaml
+#   uv run ansible-playbook -i inventories/prod/hosts.ini utils/prune_container_images.yaml --limit kube-gpu5
 - name: Prune unused container images on k0s workers
   hosts: kube_worker
   become: yes
