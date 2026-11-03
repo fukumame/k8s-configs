@@ -1,4 +1,6 @@
 ---
+nvidia_container_toolkit_version: 1.20.1-1
+
 gdr_version: 2.4.4
 gdr_version_minor: 2.4.4
 

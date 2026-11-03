@@ -1,4 +1,6 @@
 ---
 - import_tasks: nvidia-container-runtime.yaml
 - import_tasks: nv-peer-memory.yaml
+  when: nv_peer_memory_enabled | bool
 - import_tasks: gdrcopy.yaml
+  when: gdrcopy_enabled | bool
