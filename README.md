@@ -84,6 +84,7 @@ In ``group_vars/all.yaml``, set the environment:
 - ``lustre_net``: ``tcp10`` when the storage network is "仮想NIC（自動）", ``o2ib10`` when it is "SR-IOV"
 - ``node_ip_mode``: ``static`` (node IPs set by hand, in the host range 1-100) or ``dhcp``
 - ``k8s_pod_cidr``, ``k8s_service_cidr``: must not overlap with the networks of the mdx project
+- ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together.
 
 If you used ``inventory.ini`` before, move it to ``inventories/prod/hosts.ini``.
 

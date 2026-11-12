@@ -30,3 +30,9 @@ node_ip_mode: static
 # When both are left out, k0sctl uses the generated k0s config (same values).
 k8s_pod_cidr: 10.244.0.0/16
 k8s_service_cidr: 10.96.0.0/12
+
+# Kubernetes version. The defaults are in roles/k8s/defaults/main.yaml.
+# To use another version, set all three together.
+# k0s_version: v1.xx.y+k0s.z
+# kubectl_version: v1.xx.y
+# kubectl_checksum: <sha256 of the kubectl binary>

@@ -1,0 +1,8 @@
+---
+# Kubernetes version of the cluster. These are defaults, so an environment can
+# set other values in inventories/<env>/group_vars/all.yaml.
+# Change all three together: kubectl is supported only within one minor
+# version of the cluster.
+k0s_version: v1.34.3+k0s.0
+kubectl_version: v1.34.3
+kubectl_checksum: ab60ca5f0fd60c1eb81b52909e67060e3ba0bd27e55a8ac147cbc2172ff14212
