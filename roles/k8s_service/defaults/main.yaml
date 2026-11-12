@@ -1,0 +1,6 @@
+---
+# RDMA parts: NVIDIA Network Operator (RDMA shared device plugin and Multus)
+# and RDMA in GPU Operator. They are for SR-IOV NICs. With a virtual NIC there
+# is no RDMA device, so an environment can set them to false.
+network_operator_enabled: true
+gpu_operator_rdma_enabled: true

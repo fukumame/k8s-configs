@@ -31,6 +31,11 @@ node_ip_mode: static
 k8s_pod_cidr: 10.244.0.0/16
 k8s_service_cidr: 10.96.0.0/12
 
+# RDMA parts (NVIDIA Network Operator, RDMA in GPU Operator). They are for
+# SR-IOV NICs. With a virtual NIC (tcp10) there is no RDMA device.
+network_operator_enabled: false
+gpu_operator_rdma_enabled: false
+
 # Kubernetes version. The defaults are in roles/k8s/defaults/main.yaml.
 # To use another version, set all three together.
 # k0s_version: v1.xx.y+k0s.z
