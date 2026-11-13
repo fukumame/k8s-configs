@@ -87,6 +87,7 @@ In ``group_vars/all.yaml``, set the environment:
 - ``network_operator_enabled``, ``gpu_operator_rdma_enabled``: ``false`` when there is no RDMA device (virtual NIC)
 - ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together.
 - ``gpu_operator_chart_version``, ``network_operator_chart_version``, ``prometheus_stack_chart_version`` (optional): other Helm chart versions than the defaults in ``roles/k8s_service/defaults/main.yaml``
+- ``metallb_enabled``, ``metallb_addresses``: install MetalLB (tag ``service``). See "Using LoadBalancer".
 
 If you used ``inventory.ini`` before, move it to ``inventories/prod/hosts.ini``.
 
@@ -249,10 +250,12 @@ and add an annotation to the pod definition:
 
 MetalLB automatically assigns public IP addresses (which are opened to the outside of the cluster) to Services from the pooled address range. It can be used by specifiyng the ``LoadBalancer`` type in a Kubernetes service definition.
 
-The pooled addresses can be configured in the ``k8s-configs/roles/k8s_service/vars/main.yaml`` file:
+MetalLB is off by default. Turn it on and set the pooled addresses in ``inventories/<env>/group_vars/all.yaml``:
 ```yaml
-metallb_addresses: 10.18.20.200-10.18.20.210
-````
+metallb_enabled: true
+metallb_addresses: ['10.18.20.200-10.18.20.210']
+```
+Use free addresses in the service network that no VM uses. MetalLB runs in L2 mode, and only the ``kube_node`` hosts answer for the addresses (``metallb_l2_nodes``), so stopping a GPU node does not stop a LoadBalancer service.
 
 To make it globally accessible from the outside of the mdx, please configure the DNAT and ACL entries from the mdx's user portal. This operation isn't needed when accessing services using SSH port forwarding.
 

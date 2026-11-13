@@ -46,3 +46,9 @@ gpu_operator_rdma_enabled: false
 # gpu_operator_chart_version: vxx.y.z
 # network_operator_chart_version: xx.y.z
 # prometheus_stack_chart_version: xx.y.z
+
+# MetalLB (tag "service"). Off by default.
+metallb_enabled: true
+# Free addresses in the service network that no VM uses,
+# for example ['10.0.0.200-10.0.0.210'].
+metallb_addresses: []
