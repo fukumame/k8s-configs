@@ -1,0 +1,7 @@
+---
+- import_tasks: serving.yaml
+  when: knative_enabled | bool
+- import_tasks: kourier.yaml
+  when: knative_enabled | bool
+- import_tasks: config.yaml
+  when: knative_enabled | bool

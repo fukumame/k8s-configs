@@ -12,3 +12,15 @@ gpu_operator_rdma_enabled: true
 gpu_operator_chart_version: v24.9.1
 network_operator_chart_version: 23.1.0
 prometheus_stack_chart_version: 84.1.0
+
+# MetalLB (L2 mode). Off by default: production does not install MetalLB with
+# this playbook.
+metallb_enabled: false
+metallb_chart_version: 0.16.1
+# Address ranges for LoadBalancer services, for example
+# ['10.0.0.200-10.0.0.210']. Use free addresses in the service network of the
+# mdx project (not used by any VM).
+metallb_addresses: []
+# Nodes that answer ARP for the addresses. Use nodes that are always running,
+# not GPU nodes that are stopped to save cost.
+metallb_l2_nodes: "{{ groups['kube_node'] | default([]) }}"

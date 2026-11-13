@@ -1,0 +1,48 @@
+---
+#
+# Knative Serving
+#
+- name: Create a directory for the Knative release files
+  file:
+    path: '{{ knative_download_dir }}'
+    state: directory
+    mode: '0755'
+
+- name: Download the Knative Serving release files
+  get_url:
+    url: 'https://github.com/knative/serving/releases/download/knative-v{{ knative_serving_version }}/{{ item.name }}.yaml'
+    dest: '{{ knative_download_dir }}/{{ item.name }}-{{ knative_serving_version }}.yaml'
+    checksum: '{{ item.checksum }}'
+    mode: '0644'
+  loop:
+    - name: serving-crds
+      checksum: '{{ knative_serving_crds_checksum }}'
+    - name: serving-core
+      checksum: '{{ knative_serving_core_checksum }}'
+  loop_control:
+    label: '{{ item.name }}'
+
+- name: Install the Knative Serving CRDs and core
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    src: '{{ knative_download_dir }}/{{ item }}-{{ knative_serving_version }}.yaml'
+  loop:
+    - serving-crds
+    - serving-core
+
+- name: Wait for Knative Serving
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    namespace: knative-serving
+    name: '{{ item }}'
+    wait: true
+    wait_condition:
+      type: Available
+      status: 'True'
+    wait_timeout: 600
+  loop:
+    - activator
+    - autoscaler
+    - controller
+    - webhook

@@ -1,0 +1,41 @@
+---
+# Knative Serving with the Kourier ingress. Off by default: production does
+# not install Knative with this playbook.
+knative_enabled: false
+
+# The release files are downloaded from GitHub and checked with sha256.
+# When you change a version, change its checksums too (checksums.txt of the
+# release).
+knative_serving_version: 1.23.0
+knative_serving_crds_checksum: sha256:b172ff4901ed50f8e4e09ff8616e54d22e264df7086ce8cb74f513a04812fe74
+knative_serving_core_checksum: sha256:be3f16c9c0ac9276cc173ef04871aaeac78537f9edb116310caa02f016e9cbc2
+net_kourier_version: 1.23.0
+net_kourier_checksum: sha256:cded0c3c1d7669b1aa9f7484234b454ff3940a2b54a27d5ec4825c2d4003d01d
+
+# Directory on the bastion host for the downloaded release files.
+knative_download_dir: /tmp/knative-release
+
+# Fixed address of the Kourier LoadBalancer service. It must be in
+# metallb_addresses. Empty: MetalLB picks one.
+kourier_lb_ip: ''
+
+# Domain of Knative services. Empty: the Knative default (svc.cluster.local).
+knative_domain: ''
+
+# Data for the ConfigMaps in the knative-serving namespace. Keys that are not
+# here keep their default values.
+knative_serving_config:
+  config-features:
+    kubernetes.podspec-affinity: enabled
+    kubernetes.podspec-persistent-volume-claim: enabled
+    kubernetes.podspec-persistent-volume-write: enabled
+    kubernetes.podspec-priorityclassname: enabled
+  config-autoscaler:
+    enable-scale-to-zero: 'true'
+    # Allows "autoscaling.knative.dev/initial-scale: 0", so a new revision
+    # does not start a GPU pod right away.
+    allow-zero-initial-scale: 'true'
+  config-defaults:
+    # Large models need a long time to answer.
+    revision-timeout-seconds: '3600'
+    max-revision-timeout-seconds: '3600'

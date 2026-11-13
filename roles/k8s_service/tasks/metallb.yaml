@@ -1,7 +1,28 @@
 ---
 #
-# Metal LB
+# MetalLB (L2 mode)
 #
+- name: Check the MetalLB settings
+  assert:
+    that:
+      - metallb_addresses | length > 0
+      - metallb_l2_nodes | length > 0
+    fail_msg: Set metallb_addresses in group_vars, and put at least one host in kube_node.
+
+- name: Create the MetalLB namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: metallb-system
+        labels:
+          # The speaker needs host network access.
+          pod-security.kubernetes.io/enforce: privileged
+          pod-security.kubernetes.io/audit: privileged
+          pod-security.kubernetes.io/warn: privileged
+
 - name: Add MetalLB helm repository
   kubernetes.core.helm_repository:
     name: metallb
@@ -11,36 +32,41 @@
   kubernetes.core.helm:
     name: metallb
     chart_ref: metallb/metallb
-    release_namespace: metallb
-    create_namespace: true
-
-#- name: Generate l2.yaml
-#  template:
-#    src: templates/l2.yaml.j2
-#    dest: /tmp/l2.yaml
+    chart_version: '{{ metallb_chart_version }}'
+    release_namespace: metallb-system
+    # Wait for the webhook, which checks the resources below.
+    wait: true
+    values:
+      # Only L2 mode is used, so the BGP parts (FRR-K8s) are not needed.
+      frrk8s:
+        enabled: false
 
 - name: Create an IP address pool
-  k8s:
+  kubernetes.core.k8s:
     state: present
     definition:
       apiVersion: metallb.io/v1beta1
       kind: IPAddressPool
       metadata:
-        name: address-pool
-        namespace: metallb
+        name: default-pool
+        namespace: metallb-system
       spec:
-        addresses:
-        - '{{ metallb_addresses }}'
+        addresses: '{{ metallb_addresses }}'
 
-- name: Create a L2 advertisement
-  k8s:
+- name: Create an L2 advertisement
+  kubernetes.core.k8s:
     state: present
     definition:
       apiVersion: metallb.io/v1beta1
       kind: L2Advertisement
       metadata:
-        name: l2-advertise
-        namespace: metallb
+        name: default-l2
+        namespace: metallb-system
       spec:
         ipAddressPools:
-        - address-pool
+          - default-pool
+        nodeSelectors:
+          - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values: '{{ metallb_l2_nodes }}'
