@@ -21,7 +21,7 @@
       driver:
         enabled: false
         rdma:
-          enabled: true
+          enabled: '{{ gpu_operator_rdma_enabled | bool }}'
           useHostMofed: true 
       toolkit:
         enabled: false
