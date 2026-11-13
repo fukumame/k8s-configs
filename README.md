@@ -86,6 +86,7 @@ In ``group_vars/all.yaml``, set the environment:
 - ``k8s_pod_cidr``, ``k8s_service_cidr``: must not overlap with the networks of the mdx project
 - ``network_operator_enabled``, ``gpu_operator_rdma_enabled``: ``false`` when there is no RDMA device (virtual NIC)
 - ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together.
+- ``gpu_operator_chart_version``, ``network_operator_chart_version``, ``prometheus_stack_chart_version`` (optional): other Helm chart versions than the defaults in ``roles/k8s_service/defaults/main.yaml``
 
 If you used ``inventory.ini`` before, move it to ``inventories/prod/hosts.ini``.
 

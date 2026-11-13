@@ -41,3 +41,8 @@ gpu_operator_rdma_enabled: false
 # k0s_version: v1.xx.y+k0s.z
 # kubectl_version: v1.xx.y
 # kubectl_checksum: <sha256 of the kubectl binary>
+
+# Helm chart versions. The defaults are in roles/k8s_service/defaults/main.yaml.
+# gpu_operator_chart_version: vxx.y.z
+# network_operator_chart_version: xx.y.z
+# prometheus_stack_chart_version: xx.y.z

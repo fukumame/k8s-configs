@@ -11,6 +11,7 @@
   kubernetes.core.helm:
     name: network-operator
     chart_ref: mellanox/network-operator
+    chart_version: '{{ network_operator_chart_version }}'
     release_namespace: network-operator
     create_namespace: true
     values:
