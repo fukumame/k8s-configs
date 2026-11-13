@@ -47,8 +47,15 @@ gpu_operator_rdma_enabled: false
 # network_operator_chart_version: xx.y.z
 # prometheus_stack_chart_version: xx.y.z
 
-# MetalLB (tag "service"). Off by default.
+# MetalLB (tag "service") and Knative Serving with Kourier (tag "knative").
+# Both are off by default.
 metallb_enabled: true
 # Free addresses in the service network that no VM uses,
 # for example ['10.0.0.200-10.0.0.210'].
 metallb_addresses: []
+knative_enabled: true
+# Host names of Knative services are <service>.<namespace>.<knative_domain>.
+# Needed to call them through the Kourier LoadBalancer from outside the cluster.
+knative_domain: knative.internal
+# Fixed address of the Kourier LoadBalancer, one of metallb_addresses.
+# kourier_lb_ip: 10.0.0.200

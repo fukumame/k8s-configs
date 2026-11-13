@@ -88,6 +88,7 @@ In ``group_vars/all.yaml``, set the environment:
 - ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together.
 - ``gpu_operator_chart_version``, ``network_operator_chart_version``, ``prometheus_stack_chart_version`` (optional): other Helm chart versions than the defaults in ``roles/k8s_service/defaults/main.yaml``
 - ``metallb_enabled``, ``metallb_addresses``: install MetalLB (tag ``service``). See "Using LoadBalancer".
+- ``knative_enabled``, ``knative_domain``, ``kourier_lb_ip``: install Knative Serving and Kourier (tag ``knative``). See "Using Knative Serving".
 
 If you used ``inventory.ini`` before, move it to ``inventories/prod/hosts.ini``.
 
@@ -258,6 +259,21 @@ metallb_addresses: ['10.18.20.200-10.18.20.210']
 Use free addresses in the service network that no VM uses. MetalLB runs in L2 mode, and only the ``kube_node`` hosts answer for the addresses (``metallb_l2_nodes``), so stopping a GPU node does not stop a LoadBalancer service.
 
 To make it globally accessible from the outside of the mdx, please configure the DNAT and ACL entries from the mdx's user portal. This operation isn't needed when accessing services using SSH port forwarding.
+
+### Using Knative Serving
+
+Knative Serving and its ingress Kourier are off by default. Turn them on in ``group_vars/all.yaml`` and run the ``knative`` tag (after ``service``, which installs MetalLB):
+```yaml
+knative_enabled: true
+knative_domain: knative.internal
+kourier_lb_ip: 10.18.20.200   # optional, one of metallb_addresses
+```
+```sh
+$ ./play.sh <env> --tags knative
+```
+The Kourier service gets a LoadBalancer address from MetalLB. A Knative service is reached through this address with the host name ``<service>.<namespace>.<knative_domain>`` in the ``Host`` header. Without ``knative_domain``, Knative uses ``svc.cluster.local``, and the services can be reached only from inside the cluster.
+
+The role also sets the Knative ConfigMaps in ``knative_serving_config`` (``roles/knative/defaults/main.yaml``): for example node affinity, PVCs and priority classes in pod specs, and ``initial-scale: 0``.
 
 ### Running parallel jobs
 Please refer the [MPI operator's document](https://github.com/kubeflow/mpi-operator).

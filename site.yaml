@@ -107,6 +107,16 @@
   - all
   - never
 
+- name: Deploy Knative Serving and Kourier
+  hosts: bastion_host
+  roles:
+    - knative
+  tags:
+  - knative
+  - k8s
+  - all
+  - never
+
 #- name: Deploy spark operator
 #  hosts: bastion_host
 #  vars_files:

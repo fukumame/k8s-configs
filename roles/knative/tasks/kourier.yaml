@@ -1,0 +1,47 @@
+---
+#
+# Kourier (ingress for Knative)
+#
+- name: Download the Kourier release file
+  get_url:
+    url: 'https://github.com/knative/net-kourier/releases/download/knative-v{{ net_kourier_version }}/kourier.yaml'
+    dest: '{{ knative_download_dir }}/kourier-{{ net_kourier_version }}.yaml'
+    checksum: '{{ net_kourier_checksum }}'
+    mode: '0644'
+
+- name: Install Kourier
+  kubernetes.core.k8s:
+    state: present
+    apply: true
+    src: '{{ knative_download_dir }}/kourier-{{ net_kourier_version }}.yaml'
+
+- name: Wait for Kourier
+  kubernetes.core.k8s_info:
+    kind: Deployment
+    namespace: '{{ item.namespace }}'
+    name: '{{ item.name }}'
+    wait: true
+    wait_condition:
+      type: Available
+      status: 'True'
+    wait_timeout: 600
+  loop:
+    - namespace: kourier-system
+      name: 3scale-kourier-gateway
+    - namespace: knative-serving
+      name: net-kourier-controller
+  loop_control:
+    label: '{{ item.name }}'
+
+- name: Set the address of the Kourier LoadBalancer service
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: kourier
+        namespace: kourier-system
+        annotations:
+          metallb.io/loadBalancerIPs: '{{ kourier_lb_ip }}'
+  when: kourier_lb_ip | length > 0

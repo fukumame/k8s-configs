@@ -1,0 +1,41 @@
+---
+#
+# Knative settings
+#
+- name: Use Kourier as the Knative ingress
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: config-network
+        namespace: knative-serving
+      data:
+        ingress-class: kourier.ingress.networking.knative.dev
+
+- name: Set the Knative ConfigMaps
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: '{{ item.key }}'
+        namespace: knative-serving
+      data: '{{ item.value }}'
+  loop: '{{ knative_serving_config | dict2items }}'
+  loop_control:
+    label: '{{ item.key }}'
+
+- name: Set the domain of Knative services
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: config-domain
+        namespace: knative-serving
+      data: '{{ {knative_domain: ""} }}'
+  when: knative_domain | length > 0
