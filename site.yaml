@@ -117,6 +117,17 @@
   - all
   - never
 
+- name: Set up the entry proxy (nginx with TLS and API keys)
+  hosts: entry_proxy
+  vars_files:
+    - vault.yaml
+  roles:
+    - entry_proxy
+  tags:
+  - entry_proxy
+  - all
+  - never
+
 #- name: Deploy spark operator
 #  hosts: bastion_host
 #  vars_files:

@@ -1,0 +1,72 @@
+# {{ ansible_managed }}
+# Entry proxy: TLS, API key check, and routing to Knative services (Kourier).
+
+# 1 when the Authorization header has one of the API keys.
+map $http_authorization $entry_proxy_key_ok {
+    default 0;
+    include /etc/nginx/entry-proxy-keys.conf;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{ entry_proxy_server_name }};
+
+    # Checks of Let's Encrypt (HTTP-01). Port 80 serves nothing else.
+    location /.well-known/acme-challenge/ {
+        root {{ entry_proxy_acme_webroot }};
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+{% if entry_proxy_tls | bool %}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name {{ entry_proxy_server_name }};
+
+    ssl_certificate /etc/letsencrypt/live/{{ entry_proxy_server_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ entry_proxy_server_name }}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:entry_proxy:10m;
+    ssl_session_timeout 1d;
+
+    client_max_body_size {{ entry_proxy_client_max_body_size }};
+
+    # For monitoring. It needs no key and does not reach Knative.
+    location = /healthz {
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+{% for route in entry_proxy_routes %}
+
+    location /{{ route.path }}/ {
+        default_type application/json;
+        if ($entry_proxy_key_ok = 0) {
+            return 401 '{"error": "invalid API key"}\n';
+        }
+
+        proxy_pass {{ entry_proxy_upstream }}/;
+        proxy_set_header Host {{ route.service }}.{{ route.namespace | default('default') }}.{{ entry_proxy_knative_domain }};
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Connection "";
+
+        # Send streamed answers (Server-Sent Events) at once.
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout {{ entry_proxy_timeout }}s;
+        proxy_send_timeout {{ entry_proxy_timeout }}s;
+    }
+{% endfor %}
+
+    location / {
+        default_type application/json;
+        return 404 '{"error": "not found"}\n';
+    }
+}
+{% endif %}

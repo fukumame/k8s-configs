@@ -59,3 +59,10 @@ knative_enabled: true
 knative_domain: knative.internal
 # Fixed address of the Kourier LoadBalancer, one of metallb_addresses.
 # kourier_lb_ip: 10.0.0.200
+
+# Entry proxy (tag "entry_proxy", hosts in [entry_proxy]). It also needs
+# kourier_lb_ip and knative_domain. The API keys are in vault.yaml.
+# entry_proxy_server_name: api.example.org
+# entry_proxy_routes:
+#   - path: model-a
+#     service: model-a-vllm
