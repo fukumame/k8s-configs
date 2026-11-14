@@ -3,3 +3,6 @@ harbor_admin_password:
 harbor_db_password:
 
 grafana_password:
+
+# API keys of the entry proxy (one or two), for example from "openssl rand -hex 32".
+entry_proxy_api_keys: []

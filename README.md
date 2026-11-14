@@ -89,6 +89,7 @@ In ``group_vars/all.yaml``, set the environment:
 - ``gpu_operator_chart_version``, ``network_operator_chart_version``, ``prometheus_stack_chart_version`` (optional): other Helm chart versions than the defaults in ``roles/k8s_service/defaults/main.yaml``
 - ``metallb_enabled``, ``metallb_addresses``: install MetalLB (tag ``service``). See "Using LoadBalancer".
 - ``knative_enabled``, ``knative_domain``, ``kourier_lb_ip``: install Knative Serving and Kourier (tag ``knative``). See "Using Knative Serving".
+- ``entry_proxy_server_name``, ``entry_proxy_routes``: nginx in front of Kourier for the hosts in ``[entry_proxy]`` (tag ``entry_proxy``). See "Using the entry proxy".
 
 If you used ``inventory.ini`` before, move it to ``inventories/prod/hosts.ini``.
 
@@ -274,6 +275,33 @@ $ ./play.sh <env> --tags knative
 The Kourier service gets a LoadBalancer address from MetalLB. A Knative service is reached through this address with the host name ``<service>.<namespace>.<knative_domain>`` in the ``Host`` header. Without ``knative_domain``, Knative uses ``svc.cluster.local``, and the services can be reached only from inside the cluster.
 
 The role also sets the Knative ConfigMaps in ``knative_serving_config`` (``roles/knative/defaults/main.yaml``): for example node affinity, PVCs and priority classes in pod specs, and ``initial-scale: 0``.
+
+### Using the entry proxy
+
+The entry proxy is nginx on a VM with a global IP address (it can be the bastion host). It ends TLS with a Let's Encrypt certificate, checks the API key, and sends each path to a Knative service through Kourier. A request without a valid key gets 401 and never reaches Knative, so it cannot start a GPU pod.
+
+Before you run it:
+- Register the DNS name of the VM.
+- In the mdx user portal, set the DNAT of the global IP address to the VM, and open TCP 80 and 443 in the ACL. Let's Encrypt checks the name over port 80 from addresses that are not published, so port 80 must be open to everyone. Port 80 serves only these checks and a redirect to https.
+
+Put the VM in the ``[entry_proxy]`` group of ``hosts.ini``, and set the routes in ``group_vars/all.yaml`` (``kourier_lb_ip`` and ``knative_domain`` are also needed):
+```yaml
+entry_proxy_server_name: api.example.org
+entry_proxy_routes:
+  - path: model-a           # https://api.example.org/model-a/v1/...
+    service: model-a-vllm   # Knative service in the namespace "default"
+```
+Set one or two API keys in ``vault.yaml``. Each key is 32 to 200 characters of letters, digits, ``_`` and ``-`` (for example from ``openssl rand -hex 32``). Use two keys to change a key without stopping the service: add the new key, change the clients, then remove the old key.
+```yaml
+entry_proxy_api_keys:
+  - <key>
+```
+```sh
+$ ./play.sh <env> --tags entry_proxy
+```
+The first run gets the certificate. certbot renews it with its systemd timer and reloads nginx after each renewal.
+
+Clients send the key as ``Authorization: Bearer <key>``. The header is passed to the service, so you can also give the same key to the service (for example ``--api-key`` of vLLM) as a second check. ``https://<server_name>/healthz`` answers without a key, for monitoring.
 
 ### Running parallel jobs
 Please refer the [MPI operator's document](https://github.com/kubeflow/mpi-operator).

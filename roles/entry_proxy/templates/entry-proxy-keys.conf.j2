@@ -1,0 +1,7 @@
+# {{ ansible_managed }}
+# API keys for the entry proxy (used in a "map" block of entry-proxy.conf).
+# Regular expressions, because plain strings in a map are compared without
+# case. The scheme "Bearer" is case-insensitive (RFC 9110), the key is not.
+{% for key in entry_proxy_api_keys %}
+"~^(?i:bearer) {{ key }}$" 1;
+{% endfor %}

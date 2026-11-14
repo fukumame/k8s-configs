@@ -1,0 +1,39 @@
+---
+# Entry proxy: nginx on a VM with a global IP, in front of Kourier. It ends
+# TLS (Let's Encrypt), checks the API key, and sends each path to a Knative
+# service. The hosts in the "entry_proxy" group get it.
+
+# DNS name of the entry proxy. Let's Encrypt checks it over port 80, so
+# port 80 must be open to everyone in the ACL. Nothing but these checks and
+# a redirect to https is served on port 80.
+entry_proxy_server_name: ''
+
+# Paths and the Knative services behind them. A request to
+# https://<server_name>/<path>/v1/... goes to the service, without the
+# /<path> prefix.
+#   - path: model-a
+#     service: model-a-vllm
+#     namespace: default    # optional, default "default"
+entry_proxy_routes: []
+
+# Address of Kourier (the address of its LoadBalancer service).
+entry_proxy_upstream: "http://{{ kourier_lb_ip | default('') }}"
+# Domain of Knative services (knative_domain of the knative role).
+entry_proxy_knative_domain: "{{ knative_domain | default('') }}"
+
+# API keys. A request without one of them gets 401 and never reaches
+# Knative, so it cannot start a GPU pod. Set them in vault.yaml. With two
+# keys, you can change a key without stopping the service.
+entry_proxy_api_keys: []
+
+# Seconds to wait for an answer. Starting a large model on a stopped GPU
+# node can take 20 minutes or more.
+entry_proxy_timeout: 3600
+entry_proxy_client_max_body_size: 100m
+
+# Let's Encrypt
+entry_proxy_acme_email: ''
+# true: use the staging server of Let's Encrypt (for tests; browsers and
+# clients do not trust its certificates).
+entry_proxy_acme_staging: false
+entry_proxy_acme_webroot: /var/www/letsencrypt

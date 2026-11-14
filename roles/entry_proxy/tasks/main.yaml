@@ -1,0 +1,130 @@
+---
+- name: Check the entry proxy settings
+  assert:
+    that:
+      - entry_proxy_server_name | length > 0
+      - entry_proxy_upstream is match('^https?://[^/]+$')
+      - entry_proxy_knative_domain | length > 0
+      - entry_proxy_routes | length > 0
+      - entry_proxy_routes | rejectattr('path', 'match', '^[A-Za-z0-9._-]+$') | list | length == 0
+      - entry_proxy_routes | rejectattr('service', 'match', '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$') | list | length == 0
+    fail_msg: >-
+      Set entry_proxy_server_name, entry_proxy_routes (path and service of each),
+      kourier_lb_ip and knative_domain in group_vars.
+
+- name: Check the API keys
+  assert:
+    that:
+      - entry_proxy_api_keys | length > 0
+      # Long random keys only, for example from "openssl rand -hex 32".
+      # Other characters would need escaping in the nginx config.
+      - entry_proxy_api_keys | reject('match', '^[A-Za-z0-9_-]{32,200}$') | list | length == 0
+    fail_msg: >-
+      Set entry_proxy_api_keys in vault.yaml: one or two keys, each 32 to 200
+      characters of letters, digits, _ and -
+  no_log: true
+
+- name: Install nginx and certbot
+  apt:
+    name:
+      - nginx
+      - certbot
+    state: present
+    update_cache: true
+  become: true
+
+- name: Remove the default nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: true
+  notify: Reload nginx
+
+- name: Create the directory for the Let's Encrypt checks
+  file:
+    path: '{{ entry_proxy_acme_webroot }}'
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Write the API keys for nginx
+  template:
+    src: entry-proxy-keys.conf.j2
+    dest: /etc/nginx/entry-proxy-keys.conf
+    owner: root
+    group: root
+    mode: '0600'
+  become: true
+  no_log: true
+  diff: false
+  notify: Reload nginx
+
+- name: Check for the certificate
+  stat:
+    path: '/etc/letsencrypt/live/{{ entry_proxy_server_name }}/fullchain.pem'
+  become: true
+  register: entry_proxy_cert
+
+# Without a certificate, only port 80 is set up first. Let's Encrypt needs it.
+- name: Write the nginx config
+  template:
+    src: entry-proxy.conf.j2
+    dest: /etc/nginx/conf.d/entry-proxy.conf
+    mode: '0644'
+  vars:
+    entry_proxy_tls: '{{ entry_proxy_cert.stat.exists }}'
+  become: true
+  notify: Reload nginx
+
+- name: Check the nginx config before starting it
+  command: nginx -t
+  become: true
+  changed_when: false
+
+- name: Start nginx
+  service:
+    name: nginx
+    state: started
+    enabled: true
+  become: true
+
+- name: Apply the nginx config
+  meta: flush_handlers
+
+- name: Get a certificate from Let's Encrypt
+  command: >-
+    certbot certonly --webroot
+    -w {{ entry_proxy_acme_webroot }}
+    -d {{ entry_proxy_server_name }}
+    --non-interactive --agree-tos
+    {{ ('--email ' ~ entry_proxy_acme_email) if entry_proxy_acme_email else '--register-unsafely-without-email' }}
+    {{ '--staging' if entry_proxy_acme_staging | bool else '' }}
+  become: true
+  when: not entry_proxy_cert.stat.exists
+
+- name: Create the directory for the renewal hook
+  file:
+    path: /etc/letsencrypt/renewal-hooks/deploy
+    state: directory
+    mode: '0755'
+  become: true
+
+# certbot renews the certificate with its systemd timer.
+- name: Reload nginx after each renewal
+  copy:
+    dest: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx
+    content: |
+      #!/bin/sh
+      systemctl reload nginx
+    mode: '0755'
+  become: true
+
+- name: Write the nginx config with TLS
+  template:
+    src: entry-proxy.conf.j2
+    dest: /etc/nginx/conf.d/entry-proxy.conf
+    mode: '0644'
+  vars:
+    entry_proxy_tls: true
+  become: true
+  notify: Reload nginx
