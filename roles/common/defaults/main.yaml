@@ -1,4 +1,10 @@
 ---
+# unattended-upgrades is removed, so that packages (kernel, NVIDIA, Lustre)
+# do not change by themselves. A host that faces the internet, for example a
+# bastion with the entry proxy, can set true (as a host variable) to keep its
+# security updates.
+keep_unattended_upgrades: false
+
 # The 10_* (Vendor) VM templates come with Docker. k0s runs its own
 # containerd, so the k8s nodes do not need Docker. Docker also sets the policy
 # of the iptables FORWARD chain to DROP, which can block traffic to pods. An

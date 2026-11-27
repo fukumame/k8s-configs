@@ -45,6 +45,7 @@
     name: unattended-upgrades
     state: absent
   become: yes
+  when: not (keep_unattended_upgrades | bool)
 
 - name: Update apt cache
   apt:
