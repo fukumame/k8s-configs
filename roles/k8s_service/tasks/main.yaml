@@ -1,6 +1,8 @@
 --- 
 - import_tasks: exascaler.yaml
+  when: exascaler_enabled | bool
 - import_tasks: storage-class.yaml
+  when: exascaler_enabled | bool
 - import_tasks: gpu-operator.yaml
 - import_tasks: network-operator.yaml
   when: network_operator_enabled | bool

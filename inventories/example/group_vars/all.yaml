@@ -36,6 +36,14 @@ k8s_service_cidr: 10.96.0.0/12
 network_operator_enabled: false
 gpu_operator_rdma_enabled: false
 
+# VM template. The defaults are for the 01_Ubuntu-* templates. With the 10_*
+# (Vendor) templates, which mount /large and /fast at boot and come with Docker:
+# lustre_client_setup_enabled: false
+# docker_disabled_on_k8s_nodes: true
+# DDN Exascaler CSI driver and its StorageClasses. Set false when /large is used
+# only by hostPath.
+# exascaler_enabled: false
+
 # Kubernetes version. The defaults are in roles/k8s/defaults/main.yaml.
 # To use another version, set all three together.
 # k0s_version: v1.xx.y+k0s.z

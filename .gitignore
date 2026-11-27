@@ -3,3 +3,5 @@ inventory.ini
 vault.yaml
 inventories/*/hosts.ini
 !inventories/example/hosts.ini
+# Values with addresses or names of an environment (this repository is public).
+inventories/*/group_vars/all/local.yaml

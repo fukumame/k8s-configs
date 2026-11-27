@@ -72,15 +72,18 @@
 - name: Collect lustre project id
   hosts: kube_worker[0]
   tasks:
+    # Only for the StorageClasses of the exascaler CSI driver.
     - name: Create an empty file on /fast lustre file system
       file:
         path: /fast/test
         state: touch
       become: yes
+      when: exascaler_enabled | default(true) | bool
     - name: Get the project id from lfs project command
       shell:
         cmd: lfs project /fast
       register: project_id
+      when: exascaler_enabled | default(true) | bool
     # - name: Show project id
     #   debug:
     #     msg: '{{ project_id.stdout_lines[0].split(" ")[0] }}'

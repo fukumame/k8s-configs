@@ -85,6 +85,9 @@ In ``group_vars/all.yaml``, set the environment:
 - ``node_ip_mode``: ``static`` (node IPs set by hand, in the host range 1-100) or ``dhcp``
 - ``k8s_pod_cidr``, ``k8s_service_cidr``: must not overlap with the networks of the mdx project
 - ``network_operator_enabled``, ``gpu_operator_rdma_enabled``: ``false`` when there is no RDMA device (virtual NIC)
+- ``lustre_client_setup_enabled``: ``false`` with the 10_* (Vendor) VM templates. They mount /large and /fast at boot by themselves, and they do not have the files that this setup uses (``/etc/lnet.conf.ddn.j2``).
+- ``docker_disabled_on_k8s_nodes``: ``true`` with the 10_* (Vendor) VM templates, which come with Docker. Docker and its containerd are stopped and disabled (not removed) on the k8s nodes: k0s has its own containerd, and Docker sets the policy of the iptables FORWARD chain to DROP.
+- ``exascaler_enabled``: ``false`` to skip the DDN Exascaler CSI driver and its StorageClasses, for example when /large is used only by hostPath
 - ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together.
 - ``gpu_operator_chart_version``, ``network_operator_chart_version``, ``prometheus_stack_chart_version`` (optional): other Helm chart versions than the defaults in ``roles/k8s_service/defaults/main.yaml``
 - ``metallb_enabled``, ``metallb_addresses``: install MetalLB (tag ``service``). See "Using LoadBalancer".

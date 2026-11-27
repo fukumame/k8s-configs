@@ -1,0 +1,7 @@
+---
+# The 10_* (Vendor) VM templates come with Docker. k0s runs its own
+# containerd, so the k8s nodes do not need Docker. Docker also sets the policy
+# of the iptables FORWARD chain to DROP, which can block traffic to pods. An
+# environment with these templates sets true: Docker and its containerd are
+# stopped and disabled (not removed) on the hosts in kube_cluster.
+docker_disabled_on_k8s_nodes: false

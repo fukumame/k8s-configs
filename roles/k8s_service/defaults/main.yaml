@@ -5,6 +5,11 @@
 network_operator_enabled: true
 gpu_operator_rdma_enabled: true
 
+# DDN Exascaler CSI driver and the StorageClasses for /fast and /large. An
+# environment that uses /large only by hostPath can set false (also read by
+# the k8s_worker role).
+exascaler_enabled: true
+
 # Helm chart versions. Without a version, Helm installs the newest chart, so a
 # later run could upgrade the cluster without notice. The defaults are the
 # versions running in production. An environment can set other versions in
