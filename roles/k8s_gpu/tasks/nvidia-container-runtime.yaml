@@ -38,61 +38,119 @@
     update_cache: yes
   become: yes
 
-- name: Generate default config file
-  # Use k0s's bundled containerd to generate the config. The system containerd
-  # (installed from the nvidia repo) emits config `version = 3` on newer
-  # releases, which k0s's bundled containerd (1.7.x, max version 2) cannot load
-  # -> containerd crash-loops and the node never becomes Ready.
-  shell:
-    cmd: /var/lib/k0s/bin/containerd config default > /etc/k0s/containerd.toml
+# How the NVIDIA runtime is added depends on the containerd of k0s:
+# - containerd 1.x: write a full /etc/k0s/containerd.toml (config version 2).
+# - containerd 2.x (for example k0s v1.36): add a drop-in file in
+#   /etc/k0s/containerd.d/ and keep /etc/k0s/containerd.toml managed by k0s.
+#   The rewrites of the full config are for containerd 1.x and do not match
+#   the config of containerd 2.x.
+- name: Read the containerd version of k0s
+  command: /var/lib/k0s/bin/containerd --version
+  register: k0s_containerd_version
+  changed_when: false
+  check_mode: false
   become: yes
 
-- name: Rewrite containerd.toml (1)
-  replace:
-    path: /etc/k0s/containerd.toml
-    regexp: 'root = "/var/lib/containerd"'
-    replace: 'root = "/var/lib/k0s/containerd"'
-  become: yes
+- name: Choose how to add the NVIDIA runtime
+  set_fact:
+    nvidia_runtime_dropin: >-
+      {{ (k0s_containerd_version.stdout.split()[2] | regex_replace('^v', '')).split('.')[0] | int >= 2 }}
 
-- name: Rewrite containerd.toml (2)
-  replace:
-    path: /etc/k0s/containerd.toml
-    regexp: 'state = "/run/containerd"'
-    replace: 'state = "/var/lib/k0s/run/containerd"'
-  become: yes
+- name: Add the NVIDIA runtime by a drop-in file (containerd 2.x)
+  when: nvidia_runtime_dropin | bool
+  block:
+    - name: Read the first line of /etc/k0s/containerd.toml
+      command: head -n 1 /etc/k0s/containerd.toml
+      register: k0s_containerd_toml_head
+      changed_when: false
+      check_mode: false
+      become: yes
 
-- name: Rewrite containerd.toml (3)
-  replace:
-    path: /etc/k0s/containerd.toml
-    regexp: 'address = "/run/containerd/containerd.sock"'
-    replace: 'address = "/var/lib/k0s/run/containerd.sock"'
-  become: yes
+    - name: Check that /etc/k0s/containerd.toml is managed by k0s
+      assert:
+        that:
+          - k0s_containerd_toml_head.stdout == '# k0s_managed=true'
+        fail_msg: >-
+          /etc/k0s/containerd.toml on {{ inventory_hostname }} is not managed by k0s,
+          so k0s does not load the drop-in files. Remove the file and restart
+          k0sworker (k0s writes it again).
 
-- name: Rewrite containerd.toml (4)
-  replace:
-    path: /etc/k0s/containerd.toml
-    after: '[plugins."io.containerd.grpc.v1.cri".containerd]'
-    regexp: 'default_runtime_name = "runc"'
-    replace: 'default_runtime_name = "nvidia"'
-  become: yes
+    # k0s reloads containerd when a file in this directory changes.
+    - name: Add the drop-in file of the NVIDIA runtime
+      copy:
+        dest: /etc/k0s/containerd.d/nvidia.toml
+        mode: '0644'
+        content: |
+          version = 3
 
-- name: Rewrite containerd.toml (5)
-  blockinfile:
-    path: /etc/k0s/containerd.toml
-    insertbefore: '\[plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime\]'
-    block: |
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+          [plugins."io.containerd.cri.v1.runtime".containerd]
+            default_runtime_name = "nvidia"
+
+          [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.nvidia]
             runtime_type = "io.containerd.runc.v2"
-            runtime_engine = ""
-            runtime_root = ""
-            privileged_without_host_devices = false
-            base_runtime_spec = ""
-            [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
-              BinaryName = "nvidia-container-runtime"
-  become: yes
 
-- name: Restart k0s worker
-  systemd:
-    name: k0sworker
-    state: restarted
-  become: yes
+            [plugins."io.containerd.cri.v1.runtime".containerd.runtimes.nvidia.options]
+              BinaryName = "/usr/bin/nvidia-container-runtime"
+      become: yes
+
+- name: Write a full containerd config with the NVIDIA runtime (containerd 1.x)
+  when: not (nvidia_runtime_dropin | bool)
+  block:
+    - name: Generate default config file
+      # Use k0s's bundled containerd to generate the config. The system containerd
+      # (installed from the nvidia repo) emits config `version = 3` on newer
+      # releases, which k0s's bundled containerd (1.7.x, max version 2) cannot load
+      # -> containerd crash-loops and the node never becomes Ready.
+      shell:
+        cmd: /var/lib/k0s/bin/containerd config default > /etc/k0s/containerd.toml
+      become: yes
+
+    - name: Rewrite containerd.toml (1)
+      replace:
+        path: /etc/k0s/containerd.toml
+        regexp: 'root = "/var/lib/containerd"'
+        replace: 'root = "/var/lib/k0s/containerd"'
+      become: yes
+
+    - name: Rewrite containerd.toml (2)
+      replace:
+        path: /etc/k0s/containerd.toml
+        regexp: 'state = "/run/containerd"'
+        replace: 'state = "/var/lib/k0s/run/containerd"'
+      become: yes
+
+    - name: Rewrite containerd.toml (3)
+      replace:
+        path: /etc/k0s/containerd.toml
+        regexp: 'address = "/run/containerd/containerd.sock"'
+        replace: 'address = "/var/lib/k0s/run/containerd.sock"'
+      become: yes
+
+    - name: Rewrite containerd.toml (4)
+      replace:
+        path: /etc/k0s/containerd.toml
+        after: '[plugins."io.containerd.grpc.v1.cri".containerd]'
+        regexp: 'default_runtime_name = "runc"'
+        replace: 'default_runtime_name = "nvidia"'
+      become: yes
+
+    - name: Rewrite containerd.toml (5)
+      blockinfile:
+        path: /etc/k0s/containerd.toml
+        insertbefore: '\[plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime\]'
+        block: |
+              [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+                runtime_type = "io.containerd.runc.v2"
+                runtime_engine = ""
+                runtime_root = ""
+                privileged_without_host_devices = false
+                base_runtime_spec = ""
+                [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+                  BinaryName = "nvidia-container-runtime"
+      become: yes
+
+    - name: Restart k0s worker
+      systemd:
+        name: k0sworker
+        state: restarted
+      become: yes
