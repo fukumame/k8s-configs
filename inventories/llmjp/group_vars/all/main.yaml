@@ -1,0 +1,47 @@
+---
+# LLM-jp serving project. Its inventory is inventories/llmjp/hosts.ini (not
+# stored in git). Values with addresses or names are in local.yaml (not stored
+# in git either).
+env_name: llmjp
+# Set true when it starts serving.
+env_protected: false
+
+# Default user of the 10_* (Vendor) VM templates.
+ansible_user: mdx-user01
+mdxuser_home: /home/mdx-user01
+mdxuser_uid: 1000
+
+internal_domain: internal
+roce_suffix: roce
+registry_server: 'harbor.{{ internal_domain }}'
+
+lustre_net: tcp10
+node_ip_mode: static
+k8s_pod_cidr: 10.244.0.0/16
+k8s_service_cidr: 10.96.0.0/12
+
+# No RDMA device (virtual NIC).
+network_operator_enabled: false
+gpu_operator_rdma_enabled: false
+
+# 10_Ubuntu 24.04 LTS (Vendor): Lustre is mounted at boot, Docker is installed.
+lustre_client_setup_enabled: false
+docker_disabled_on_k8s_nodes: true
+# /large is used by hostPath.
+exascaler_enabled: false
+
+# GPU VMs are stopped by VM Auto Scaler and can be suspended (spot VMs).
+gpu_node_taint_enabled: true
+
+metallb_enabled: true
+knative_enabled: true
+knative_domain: knative.internal
+
+# Versions (decided 2026-11-12: supported, and released at least 30 days
+# before). kubectl_checksum is the sha256 from
+# https://dl.k8s.io/release/v1.36.4/bin/linux/amd64/kubectl.sha256
+k0s_version: v1.36.4+k0s.1
+kubectl_version: v1.36.4
+kubectl_checksum: 8b8f088da2dab964f853b38464033b1be15ede2839eca751482357c45abdd05a
+gpu_operator_chart_version: v26.7.1
+prometheus_stack_chart_version: 92.3.1
