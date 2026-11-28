@@ -1,0 +1,22 @@
+---
+#
+# Taint of the GPU nodes (see gpu_node_taint_enabled in defaults/main.yaml)
+#
+- name: Taint the GPU nodes
+  kubernetes.core.k8s_taint:
+    state: present
+    name: '{{ item }}'
+    taints:
+      - key: nvidia.com/gpu
+        value: present
+        effect: PreferNoSchedule
+  loop: "{{ groups['kube_gpu'] | default([]) }}"
+  register: gpu_node_taint
+
+# A taint does not move running pods. CoreDNS and metrics-server of k0s start
+# with the cluster, before the taint, so restart them once. Pods that are
+# installed after this task (GPU Operator, MetalLB, Prometheus, Knative) are
+# placed with the taint.
+- name: Restart CoreDNS and metrics-server after a new taint
+  command: kubectl -n kube-system rollout restart deployment coredns metrics-server
+  when: gpu_node_taint is changed

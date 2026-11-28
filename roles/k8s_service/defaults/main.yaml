@@ -5,6 +5,22 @@
 network_operator_enabled: true
 gpu_operator_rdma_enabled: true
 
+# DDN Exascaler CSI driver and the StorageClasses for /fast and /large. An
+# environment that uses /large only by hostPath can set false (also read by
+# the k8s_worker role).
+exascaler_enabled: true
+
+# Taint nvidia.com/gpu=present:PreferNoSchedule on the hosts in kube_gpu.
+# Pods without a toleration (Kourier, Knative, Prometheus, CoreDNS and so on)
+# then run on the other nodes when they can, so GPU nodes can be stopped (for
+# example by an autoscaler of the VMs) without stopping them. DaemonSets (GPU
+# Operator, node exporter) and pods that request nvidia.com/gpu still run on
+# the GPU nodes: PreferNoSchedule only lowers the score of a node in
+# scheduling. It is not NoSchedule, because CoreDNS of k0s has 2 replicas that
+# must run on different nodes: with one kube_node host, the second one needs a
+# GPU node. Off by default: production does not set it.
+gpu_node_taint_enabled: false
+
 # Helm chart versions. Without a version, Helm installs the newest chart, so a
 # later run could upgrade the cluster without notice. The defaults are the
 # versions running in production. An environment can set other versions in

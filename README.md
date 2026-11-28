@@ -85,7 +85,12 @@ In ``group_vars/all.yaml``, set the environment:
 - ``node_ip_mode``: ``static`` (node IPs set by hand, in the host range 1-100) or ``dhcp``
 - ``k8s_pod_cidr``, ``k8s_service_cidr``: must not overlap with the networks of the mdx project
 - ``network_operator_enabled``, ``gpu_operator_rdma_enabled``: ``false`` when there is no RDMA device (virtual NIC)
-- ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together.
+- ``lustre_client_setup_enabled``: ``false`` with the 10_* (Vendor) VM templates. They mount /large and /fast at boot by themselves, and they do not have the files that this setup uses (``/etc/lnet.conf.ddn.j2``).
+- ``docker_disabled_on_k8s_nodes``: ``true`` with the 10_* (Vendor) VM templates, which come with Docker. Docker and its containerd are stopped and disabled (not removed) on the k8s nodes: k0s has its own containerd, and Docker sets the policy of the iptables FORWARD chain to DROP.
+- ``keep_unattended_upgrades`` (host variable): ``true`` keeps unattended-upgrades on that host, for example on a bastion with the entry proxy. Other hosts lose it (the common role removes it).
+- ``exascaler_enabled``: ``false`` to skip the DDN Exascaler CSI driver and its StorageClasses, for example when /large is used only by hostPath
+- ``gpu_node_taint_enabled``: ``true`` taints the GPU nodes with ``nvidia.com/gpu=present:PreferNoSchedule`` (tag ``service``), so that Kourier, Knative, Prometheus and so on run on the kube-node hosts and GPU nodes can be stopped. See ``roles/k8s_service/defaults/main.yaml``.
+- ``k0s_version``, ``kubectl_version``, ``kubectl_checksum`` (optional): another Kubernetes version than the default in ``roles/k8s/defaults/main.yaml``. Set all three together. When the containerd of k0s is 2.x (for example k0s v1.36), the ``k8s_gpu`` role adds the NVIDIA runtime by a drop-in file in ``/etc/k0s/containerd.d/`` instead of a full ``/etc/k0s/containerd.toml``. It checks the version by itself.
 - ``gpu_operator_chart_version``, ``network_operator_chart_version``, ``prometheus_stack_chart_version`` (optional): other Helm chart versions than the defaults in ``roles/k8s_service/defaults/main.yaml``
 - ``metallb_enabled``, ``metallb_addresses``: install MetalLB (tag ``service``). See "Using LoadBalancer".
 - ``knative_enabled``, ``knative_domain``, ``kourier_lb_ip``: install Knative Serving and Kourier (tag ``knative``). See "Using Knative Serving".

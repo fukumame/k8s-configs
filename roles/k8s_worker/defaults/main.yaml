@@ -1,0 +1,12 @@
+---
+# Set up the Lustre client with the files of the 01_Ubuntu-* VM templates
+# (/etc/lnet.conf.ddn.j2 on the bastion, commented lines in /etc/fstab).
+# The 10_* (Vendor) templates mount /large and /fast at boot by themselves
+# (mdx-setup and lustre_client services), so an environment with these
+# templates sets false.
+lustre_client_setup_enabled: true
+
+# DDN Exascaler CSI driver (StorageClasses for /fast and /large). An
+# environment that uses /large only by hostPath can set false. The k8s_service
+# role and the "Collect lustre project id" play read it too.
+exascaler_enabled: true
