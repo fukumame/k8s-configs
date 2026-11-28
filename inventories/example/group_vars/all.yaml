@@ -44,6 +44,10 @@ gpu_operator_rdma_enabled: false
 # only by hostPath.
 # exascaler_enabled: false
 
+# Keep pods other than GPU workloads off the GPU nodes when they can (PreferNoSchedule),
+# for example when GPU VMs are stopped to save cost.
+# gpu_node_taint_enabled: true
+
 # Kubernetes version. The defaults are in roles/k8s/defaults/main.yaml.
 # To use another version, set all three together.
 # k0s_version: v1.xx.y+k0s.z
